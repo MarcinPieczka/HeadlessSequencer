@@ -4,7 +4,39 @@ from time import sleep
 from tkinter import Tk, Label, Button
 import threading
 
-patterns = [40 for _ in range(8)]
+patterns = [40 for _ in range(16)]
+step_mapping = {
+    '1': 0,
+    '2': 1,
+    '3': 2,
+    '4': 3,
+    '5': 4,
+    '6': 5,
+    '7': 6,
+    '8': 7,
+    'q': 8,
+    'w': 9,
+    'e': 10,
+    'r': 11,
+    't': 12,
+    'y': 13,
+    'u': 14,
+    'i': 15,
+}
+note_mapping = {
+    'z': 0,
+    's': 1,
+    'x': 2,
+    'd': 3,
+    'c': 4,
+    'v': 5,
+    'g': 6,
+    'b': 7,
+    'h': 8,
+    'n': 9,
+    'j': 10,
+    'm': 11,
+}
 
 class MyFirstGUI:
     def __init__(self, master, seq):
@@ -16,10 +48,16 @@ class MyFirstGUI:
         self.label = Label(master, text="SickSeq")
         self.label.pack()
 
+        self.step = 1
+        self.base_note = 24
+
     def key_press(self, event):
         global patterns
-        patterns = [x - 1 for x in patterns]
-        print(event)
+        if event.keysym in note_mapping.keys():
+            patterns[self.step] = self.base_note + note_mapping[event.keysym]
+        elif event.keysym in step_mapping.keys():
+            self.step = step_mapping[event.keysym]
+        print(event.keysym)
 
 class Sequencer(threading.Thread):
     def __init__(self):
@@ -32,14 +70,11 @@ class Sequencer(threading.Thread):
         global patterns
 
         while True:
-            print('jestem')
             if self.stop:
                 alsaseq.stop()
                 break
             for note in patterns:
                 note_tuple = (0, note, 100)
-                print(noteonevent(*note_tuple))
-                #alsaseq.output((6, 1, 0, 1, (5, 0), (0, 0), (0, 0), (0, 60, 127, 0, 100)))
                 alsaseq.output(noteonevent(*note_tuple))
                 sleep(0.2)
                 alsaseq.output(noteoffevent(*note_tuple))
