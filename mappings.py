@@ -30,3 +30,14 @@ note_mapping = {
     'j': 10,
     'm': 11,
 }
+pattern_mapping = {
+    '0': 0,
+    'minus': 1,
+    'equal': 2,
+    'p': 3,
+    'bracketleft': 4,
+    'bracketright': 5,
+    'semicolon': 6,
+    'apostrophe': 7,
+    'backslash': 8,
+}

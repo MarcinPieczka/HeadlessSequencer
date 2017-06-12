@@ -6,7 +6,7 @@ from time import time
 from sortedcontainers import SortedListWithKey
 
 from mappings import *
-
+from midi_out_wrapper import MidiOutWrapper
 
 class MyFirstGUI:
     def __init__(self, master):
@@ -40,8 +40,8 @@ class Sequencer(threading.Thread):
         self.stop = False
 
     def run(self):
-        alsaseq.client('Simple', 1, 1, False)
-        alsaseq.start()
+        # alsaseq.client('Simple', 1, 1, False)
+        # alsaseq.start()
         global patterns
 
         while True:
@@ -54,7 +54,7 @@ class Sequencer(threading.Thread):
 
 
 class Pattern:
-    def __init__(self):
+    def __init__(self, channel):
         self.tempo = None
         self.between = None
         self.set_tempo(120)
@@ -64,7 +64,7 @@ class Pattern:
         self.count = 0
         self.start_time = None
         self.is_running = False
-        self.channel = 0
+        self.channel = channel
 
     def set_tempo(self, tempo):
         self.tempo = tempo
@@ -97,7 +97,9 @@ class Pattern:
         return self.start_time + self.count * self.between <= time()
 
     def note_on(self, note, velocity):
-        alsaseq.output(noteonevent(self.channel, note, velocity))
+        # print(noteonevent(self.channel, note, velocity))
+        # alsaseq.output(noteonevent(self.channel, note, velocity))
+        midi.note_on(note=note, velocity=velocity, ch=self.channel)
 
 
 class NoteOffPlayer:
@@ -105,11 +107,13 @@ class NoteOffPlayer:
         self.notes = SortedListWithKey(key=lambda x: x[3])
 
     def add(self, channel, note, vel, ttplay):
-        self.notes.add((channel, note, vel, ttplay))
+        self.notes.add((note, vel, channel, ttplay))
 
     def play_note(self):
         if self.notes and time() >= self.notes[0][3]:
-            alsaseq.output(noteoffevent(*self.notes[0][:3]))
+            # alsaseq.output(noteoffevent(*self.notes[0][:3]))
+            note, velocity, channel = self.notes[0][:3]
+            midi.note_off(note=note, velocity=velocity, ch=channel)
             del self.notes[0]
             self.play_note()
 
@@ -120,8 +124,9 @@ def closing():
 
 
 # starting program
+midi = MidiOutWrapper()
 note_off_player = NoteOffPlayer()
-patterns = [Pattern() for _ in range(9)]
+patterns = [Pattern(channel=0) for x in range(9)]
 for p in patterns:
     p.start()
 
